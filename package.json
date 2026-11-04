@@ -12,6 +12,9 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "puppeteer": {
+    "cacheDirectory": ".cache/puppeteer"
+  },
   "dependencies": {
     "cheerio": "^1.2.0",
     "puppeteer": "^25.16.0"
