@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inizio Google Scraper</title>
+</head>
+
+<body>
+<h1>Google scraper</h1>
+
+<form id="form">
+    <input id="q" size="40" placeholder="keyword">
+    <button type="submit">Search</button>
+</form>
+
+<p id="status"></p>
+
+<table border="5" cellpadding="4">
+    <tr>
+        <th>#</th>
+        <th>Title</th>
+        <th>Link</th>
+        <th>Snippet</th>
+    </tr>
+    <tbody id="rows"></tbody>
+</table>
+
+<br>
+
+<button id="download" disabled>Download CSV</button>
+
+<script>
+const form = document.getElementById('form');
+const q = document.getElementById('q');
+const status = document.getElementById('status');
+const rows = document.getElementById('rows');
+const download = document.getElementById('download');
+
+let csv = '';
+
+// search
+form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    status.textContent = 'searching...';
+    rows.innerHTML = '';
+    download.disabled = true;
+
+    try
+    {
+        const response = await fetch('/api/search?q=' + encodeURIComponent(q.value));
+        const data = await response.json();
+
+        if(!response.ok)
+        {
+            status.textContent = data.error;
+            return;
+        }
+
+        csv = data.csv;
+        download.disabled = false;
+        status.textContent = data.results.length + ' results';
+
+        for(const result of data.results)
+        {
+            const tr = document.createElement('tr');
+
+            const position = document.createElement('td');
+            position.textContent = result.position;
+
+            const title = document.createElement('td');
+            title.textContent = result.title;
+
+            const link = document.createElement('td');
+            const a = document.createElement('a');
+            a.href = result.link;
+            a.textContent = 'open';
+            a.target = '_blank';
+            link.appendChild(a);
+
+            const snippet = document.createElement('td');
+            snippet.textContent = result.snippet;
+
+            tr.appendChild(position);
+            tr.appendChild(title);
+            tr.appendChild(link);
+            tr.appendChild(snippet);
+
+            rows.appendChild(tr);
+        }
+    }
+    catch(err)
+    {
+        status.textContent = 'error: ' + err.message;
+    }
+});
+
+// download
+download.addEventListener('click', () => {
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'results.csv';
+    a.click();
+
+    URL.revokeObjectURL(url);
+});
+</script>
+
+</body>
+</html>
